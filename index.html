@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>5월 달력 투두리스트</title>
+    <style>
+        /* 🎨 여기에 간단한 디자인(CSS)을 넣어둘게요 */
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        #calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 350px; margin-bottom: 20px; }
+        .day { border: 1px solid #ddd; padding: 10px; text-align: center; cursor: pointer; border-radius: 4px; }
+        .day:hover { background-color: #f0f0f0; }
+        .selected { background-color: #007bff; color: white; font-weight: bold; }
+        .completed { text-decoration: line-through; color: #888; }
+        .delete-btn { margin-left: 10px; background-color: #ff4d4d; color: white; border: none; padding: 2px 5px; cursor: pointer; }
+        
+        /* 달력 상태 색상 */
+        .status-green { background-color: #d4edda; color: #155724; }
+        .status-yellow { background-color: #fff3cd; color: #856404; }
+        .status-red { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+
+    <h1>🗓️ 2조 소프트웨어 과제 달력</h1>
+    <div id="calendar"></div>
+    <h3 id="selectedDate">선택한 날짜 : 5월 20일</h3>
+    
+    <div style="margin-bottom: 20px;">
+        <input type="text" id="taskInput" placeholder="할 일을 입력하세요" style="padding: 5px; width: 200px;">
+        <button onclick="addTask()" style="padding: 5px 10px;">추천 추가</button>
+    </div>
+    
+    <ul id="taskList"></ul>
+    
+    <div style="margin-top: 20px; padding: 10px; border: 1px solid #eee; max-width: 350px;">
+        <strong>📊 달성도 통계</strong>
+        <div>완료: <span id="completedCount">0</span>개 / 전체: <span id="totalCount">0</span>개</div>
+        <div id="remainingText">남은 과제 0개</div>
+        <div id="progressText" style="margin-bottom: 5px;">진행률 0%</div>
+        <div style="background-color: #eee; width: 100%; height: 10px; border-radius: 5px; overflow: hidden;">
+            <div id="progressBar" style="background-color: #28a745; width: 0%; height: 100%; transition: width 0.3s;"></div>
+        </div>
+    </div>
+
+    <script>
+      const calendar = document.getElementById("calendar");
+      let selectedDay = 1;
+      const tasks = {};
+      const today = new Date().getDate();
+     
+      // 달력 생성
+      for(let i=1;i<=31;i++){
+        const day=document.createElement("div");
+        day.classList.add("day");
+     
+        if(i===today){
+          day.classList.add("selected");
+          selectedDay = today;
+        }
+     
+        day.textContent=i;
+        day.dataset.day=i;
+     
+        day.onclick=function(){
+          document.querySelectorAll(".day").forEach(d=>{
+            d.classList.remove("selected");
+          });
+          day.classList.add("selected");
+          selectedDay=i;
+          document.getElementById("selectedDate").textContent=`선택한 날짜 : 5월 ${i}일`;
+          renderTasks();
+        }
+        calendar.appendChild(day);
+      }
+     
+      document.getElementById("selectedDate").textContent = `선택한 날짜 : 5월 ${today}일`;
+     
+      // 할 일 추가
+      function addTask(){
+        const input=document.getElementById("taskInput");
+        const text=input.value.trim();
+        if(text===""){
+          alert("할 일을 입력하세요!");
+          return;
+        }
+        if(!tasks[selectedDay]){
+          tasks[selectedDay]=[];
+        }
+        tasks[selectedDay].push({
+          text:text,
+          completed:false
+        });
+        input.value="";
+        renderTasks();
+        updateCalendarStatus();
+      }
+     
+      // 할 일 렌더링
+      function renderTasks(){
+        const list=document.getElementById("taskList");
+        list.innerHTML="";
+        const currentTasks=tasks[selectedDay] || [];
+        let completed=0;
+     
+        currentTasks.forEach((task,index)=>{
+          const li=document.createElement("li");
+          const left=document.createElement("div");
+          left.className="left";
+          left.style.display = "inline-block";
+     
+          const checkbox=document.createElement("input");
+          checkbox.type="checkbox";
+          checkbox.checked=task.completed;
+     
+          const span=document.createElement("span");
+          span.textContent=task.text;
+          if(task.completed){
+            span.classList.add("completed");
+            completed++;
+          }
+     
+          checkbox.onchange=function(){
+            task.completed=checkbox.checked;
+            renderTasks();
+            updateCalendarStatus();
+          }
+     
+          const deleteBtn=document.createElement("button");
+          deleteBtn.textContent="삭제";
+          deleteBtn.className="delete-btn";
+          deleteBtn.onclick=function(){
+            currentTasks.splice(index,1);
+            renderTasks();
+            updateCalendarStatus();
+          }
+     
+          left.appendChild(checkbox);
+          left.appendChild(span);
+          li.appendChild(left);
+          li.appendChild(deleteBtn);
+          list.appendChild(li);
+        });
+     
+        // 통계 계산
+        const total=currentTasks.length;
+        const remaining=total-completed;
+        const percent= total===0 ? 0 : Math.round((completed/total)*100);
+     
+        document.getElementById("completedCount").textContent=completed;
+        document.getElementById("totalCount").textContent=total;
+        document.getElementById("remainingText").textContent=`남은 과제 ${remaining}개`;
+        document.getElementById("progressText").textContent=`진행률 ${percent}%`;
+        document.getElementById("progressBar").style.width=`${percent}%`;
+      }
+     
+      // 캘린더 상태 업데이트
+      function updateCalendarStatus(){
+        document.querySelectorAll(".day").forEach(day=>{
+          day.classList.remove("status-red", "status-yellow", "status-green");
+          const date = Number(day.dataset.day);
+          const currentTasks = tasks[date];
+     
+          if(!currentTasks || currentTasks.length===0){ return; }
+          if(date >= today){ return; }
+     
+          const total = currentTasks.length;
+          const completed = currentTasks.filter(task => task.completed).length;
+          const percent = (completed / total) * 100;
+     
+          if(percent === 100){ day.classList.add("status-green"); }
+          else if(percent >= 50){ day.classList.add("status-yellow"); }
+          else{ day.classList.add("status-red"); }
+        });
+      }
+    </script>
+</body>
+</html>
