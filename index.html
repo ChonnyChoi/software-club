@@ -1,368 +1,251 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>5월 달력 투두리스트 - 확장판</title>
-    <style>
-        /* 🎨 글로벌 스타일 및 레이아웃 확장 */
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            padding: 40px; 
-            background-color: #f8f9fa;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 30px;
-            color: #222;
-        }
-
-        /* 🖥️ 메인 컨테이너: 화면에 꽉 차고 시원하게 비율 조정 */
-        .container {
-            width: 100%;
-            max-width: 1000px; /* 전체 너비를 1000px로 대폭 확장 */
-            background: white;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-
-        /* 🗓️ 7열 월간 달력 그리드 확장 */
-        #calendar { 
-            display: grid; 
-            grid-template-columns: repeat(7, 1fr); 
-            gap: 12px; 
-            margin-bottom: 30px; 
-        }
-
-        /* 📅 달력의 각 날짜 칸 크기 키우기 */
-        .day { 
-            position: relative;
-            border: 1px solid #e9ecef; 
-            height: 100px; /* 세로 크기를 100px로 늘려 탁 트인 느낌 장착 */
-            padding: 10px; 
-            text-align: left; 
-            cursor: pointer; 
-            border-radius: 8px; 
-            background-color: #fff;
-            transition: all 0.2s ease;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .day:hover { 
-            background-color: #f1f3f5; 
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-        }
-
-        /* 선택된 날짜 테두리 강조 */
-        .selected { 
-            border: 2.5px solid #007bff !important; 
-            background-color: #e7f5ff;
-        }
-        
-        /* 📍 할 일 상태를 알려주는 하단 포인트 도트(Dot) */
-        .task-dot {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            display: none;
-        }
-
-        /* 과거 날짜 달성도별 색상 매칭 */
-        .status-green { background-color: #28a745; box-shadow: 0 0 6px #28a745; }
-        .status-yellow { background-color: #ffc107; box-shadow: 0 0 6px #ffc107; }
-        .status-red { background-color: #dc3545; box-shadow: 0 0 6px #dc3545; }
-
-        /* ✍️ 입력창 및 버튼 구역 스타일 업그레이드 */
-        .input-section {
-            display: flex;
-            gap: 10px;
-            margin: 25px 0;
-        }
-
-        #taskInput { 
-            flex: 1;
-            padding: 12px 15px; 
-            font-size: 1.1rem;
-            border: 1px solid #ced4da;
-            border-radius: 8px;
-            outline: none;
-        }
-        #taskInput:focus { border-color: #007bff; }
-
-        .add-btn { 
-            padding: 12px 24px; 
-            font-size: 1.1rem;
-            background-color: #007bff; 
-            color: white; 
-            border: none; 
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .add-btn:hover { background-color: #0056b3; }
-
-        /* 📝 할 일 목록 커스터마이징 */
-        #taskList { 
-            list-style: none; 
-            padding: 0; 
-            margin-bottom: 30px;
-        }
-
-        #taskList li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-            border-left: 5px solid #6c757d;
-        }
-
-        #taskList li.item-completed {
-            border-left-color: #28a745;
-            background-color: #e8f5e9;
-        }
-
-        .completed { text-decoration: line-through; color: #adb5bd; }
-        
-        .delete-btn { 
-            background-color: #e63946; 
-            color: white; 
-            border: none; 
-            padding: 6px 12px; 
-            border-radius: 6px;
-            cursor: pointer; 
-            font-weight: 600;
-        }
-        .delete-btn:hover { background-color: #c1121f; }
-
-        /* 📊 통계 보드 확장 (대시보드 스타일) */
-        .stats-board { 
-            background-color: #f1f3f5;
-            padding: 20px; 
-            border-radius: 12px; 
-            margin-top: 25px;
-        }
-        .stats-title { font-size: 1.2rem; display: block; margin-bottom: 10px; }
-        .stats-details { font-size: 1.05rem; color: #495057; margin-bottom: 15px; }
-
-        .progress-container {
-            background-color: #dee2e6; 
-            width: 100%; 
-            height: 15px; /* 게이지 바 두께 확장 */
-            border-radius: 10px; 
-            overflow: hidden; 
-        }
-        #progressBar { 
-            background-color: #28a745; 
-            width: 0%; 
-            height: 100%; 
-            transition: width 0.4s ease-out; 
-        }
-    </style>
-</head>
-<body>
-
-    <h1>🗓️ 2조 소프트웨어 과제 달력</h1>
-    
-    <div class="container">
-        <div id="calendar"></div>
-        
-        <hr style="border: 0; height: 1px; background: #e9ecef;">
-        
-        <h2 id="selectedDate" style="margin-top: 20px; color: #007bff;">선택한 날짜 : 5월 20일</h2>
-        
-        <div class="input-section">
-            <input type="text" id="taskInput" placeholder="오늘 공부할 계획이나 할 일을 입력하세요">
-            <button class="add-btn" onclick="addTask()">추천 추가</button>
-        </div>
-        
-        <ul id="taskList"></ul>
-        
-        <div class="stats-board">
-            <strong class="stats-title">📊 우리 조 학습 달성도 통계</strong>
-            <div class="stats-details">
-                완료: <span id="completedCount" style="font-weight:bold; color:#28a745;">0</span>개 / 
-                전체: <span id="totalCount" style="font-weight:bold;">0</span>개 
-                (<span id="remainingText">남은 과제 0개</span>)
-            </div>
-            <div id="progressText" style="margin-bottom: 8px; font-weight: bold; font-size: 1.1rem;">진행률 0%</div>
-            <div class="progress-container">
-                <div id="progressBar"></div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-      const calendar = document.getElementById("calendar");
-      let selectedDay = 1;
-      const tasks = {};
-      const today = new Date().getDate();
-     
-      // 1. 시원시원한 대형 달력 생성 루프 (1일~31일)
-      for(let i=1; i<=31; i++){
-        const day = document.createElement("div");
-        day.classList.add("day");
-     
-        if(i === today){
-          day.classList.add("selected");
-          selectedDay = today;
-        }
-     
-        // 날짜 숫자 기입
-        day.innerHTML = `<span>${i}</span><div class="task-dot" id="dot-${i}"></div>`;
-        day.dataset.day = i;
-     
-        // 날짜 칸을 클릭했을 때의 인터랙션
-        day.onclick = function(){
-          document.querySelectorAll(".day").forEach(d => {
-            d.classList.remove("selected");
-          });
-          day.classList.add("selected");
-          selectedDay = i;
-          document.getElementById("selectedDate").textContent = `선택한 날짜 : 5월 ${i}일`;
-          renderTasks();
-        }
-        calendar.appendChild(day);
+<script>
+ 
+  const calendar = document.getElementById("calendar");
+ 
+  let selectedDay = 1;
+ 
+  const tasks = {};
+ 
+  // 현재 날짜 가져오기
+ 
+  const today = new Date().getDate();
+ 
+  // 달력 생성
+ 
+  for(let i=1;i<=31;i++){
+ 
+    const day=document.createElement("div");
+ 
+    day.classList.add("day");
+ 
+    // 오늘 날짜 기본 선택
+ 
+    if(i===today){
+      day.classList.add("selected");
+      selectedDay = today;
+    }
+ 
+    day.textContent=i;
+ 
+    day.dataset.day=i;
+ 
+    day.onclick=function(){
+ 
+      document.querySelectorAll(".day").forEach(d=>{
+        d.classList.remove("selected");
+      });
+ 
+      day.classList.add("selected");
+ 
+      selectedDay=i;
+ 
+      document.getElementById("selectedDate").textContent=
+      `선택한 날짜 : 5월 ${i}일`;
+ 
+      renderTasks();
+ 
+    }
+ 
+    calendar.appendChild(day);
+ 
+  }
+ 
+  // 초기 날짜 표시
+ 
+  document.getElementById("selectedDate").textContent =
+  `선택한 날짜 : 5월 ${today}일`;
+ 
+  // 할 일 추가
+ 
+  function addTask(){
+ 
+    const input=document.getElementById("taskInput");
+ 
+    const text=input.value.trim();
+ 
+    if(text===""){
+      alert("할 일을 입력하세요!");
+      return;
+    }
+ 
+    if(!tasks[selectedDay]){
+      tasks[selectedDay]=[];
+    }
+ 
+    tasks[selectedDay].push({
+      text:text,
+      completed:false
+    });
+ 
+    input.value="";
+ 
+    renderTasks();
+ 
+    updateCalendarStatus();
+ 
+  }
+ 
+  // 할 일 렌더링
+ 
+  function renderTasks(){
+ 
+    const list=document.getElementById("taskList");
+ 
+    list.innerHTML="";
+ 
+    const currentTasks=tasks[selectedDay] || [];
+ 
+    let completed=0;
+ 
+    currentTasks.forEach((task,index)=>{
+ 
+      const li=document.createElement("li");
+ 
+      const left=document.createElement("div");
+ 
+      left.className="left";
+ 
+      const checkbox=document.createElement("input");
+ 
+      checkbox.type="checkbox";
+ 
+      checkbox.checked=task.completed;
+ 
+      const span=document.createElement("span");
+ 
+      span.textContent=task.text;
+ 
+      if(task.completed){
+        span.classList.add("completed");
+        completed++;
       }
-     
-      document.getElementById("selectedDate").textContent = `선택한 날짜 : 5월 ${today}일`;
-     
-      // 2. 할 일 리스트 등록 함수
-      function addTask(){
-        const input = document.getElementById("taskInput");
-        const text = input.value.trim();
-        if(text === ""){
-          alert("할 일을 입력하세요!");
-          return;
-        }
-        if(!tasks[selectedDay]){
-          tasks[selectedDay] = [];
-        }
-        tasks[selectedDay].push({
-          text: text,
-          completed: false
-        });
-        input.value = "";
+ 
+      checkbox.onchange=function(){
+ 
+        task.completed=checkbox.checked;
+ 
         renderTasks();
+ 
         updateCalendarStatus();
+ 
       }
-     
-      // 3. 리스트 및 대시보드 새로고침 (렌더링)
-      function renderTasks(){
-        const list = document.getElementById("taskList");
-        list.innerHTML = "";
-        const currentTasks = tasks[selectedDay] || [];
-        let completed = 0;
-     
-        currentTasks.forEach((task, index) => {
-          const li = document.createElement("li");
-          
-          const left = document.createElement("div");
-          left.style.display = "flex";
-          left.style.alignItems = "center";
-          left.style.gap = "12px";
-     
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.style.width = "20px";
-          checkbox.style.height = "20px";
-          checkbox.checked = task.completed;
-     
-          const span = document.createElement("span");
-          span.textContent = task.text;
-          
-          if(task.completed){
-            span.classList.add("completed");
-            li.classList.add("item-completed");
-            completed++;
-          }
-     
-          checkbox.onchange = function(){
-            task.completed = checkbox.checked;
-            renderTasks();
-            updateCalendarStatus();
-          }
-     
-          const deleteBtn = document.createElement("button");
-          deleteBtn.textContent = "삭제";
-          deleteBtn.className = "delete-btn";
-          deleteBtn.onclick = function(){
-            currentTasks.splice(index, 1);
-            renderTasks();
-            updateCalendarStatus();
-          }
-     
-          left.appendChild(checkbox);
-          left.appendChild(span);
-          li.appendChild(left);
-          li.appendChild(deleteBtn);
-          list.appendChild(li);
-        });
-     
-        // 진행률 통계 데이터 실시간 주입
-        const total = currentTasks.length;
-        const remaining = total - completed;
-        const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
-     
-        document.getElementById("completedCount").textContent = completed;
-        document.getElementById("totalCount").textContent = total;
-        document.getElementById("remainingText").textContent = `남은 과제 ${remaining}개`;
-        document.getElementById("progressText").textContent = `진행률 ${percent}%`;
-        document.getElementById("progressBar").style.width = `${percent}%`;
+ 
+      const deleteBtn=document.createElement("button");
+ 
+      deleteBtn.textContent="삭제";
+ 
+      deleteBtn.className="delete-btn";
+ 
+      deleteBtn.onclick=function(){
+ 
+        currentTasks.splice(index,1);
+ 
+        renderTasks();
+ 
+        updateCalendarStatus();
+ 
       }
-     
-      // 4. 깔끔한 도트(Dot) 포인트 형태로 달력 상태 업데이트 변경
-      function updateCalendarStatus(){
-        for(let i=1; i<=31; i++){
-          const dot = document.getElementById(`dot-${i}`);
-          if(!dot) continue;
-          
-          dot.className = "task-dot"; // 클래스 초기화
-          const currentTasks = tasks[i];
-     
-          // 과제가 아예 없으면 도트 숨기기
-          if(!currentTasks || currentTasks.length === 0){
-            dot.style.display = "none";
-            continue;
-          }
-     
-          // 과제가 있으면 일단 도트 노출
-          dot.style.display = "block";
-          
-          // 오늘을 포함한 미래 날짜는 회색 점으로 대기 처리 (기본 인디케이터)
-          if(i >= today){
-            dot.style.backgroundColor = "#6c757d";
-            dot.style.boxShadow = "none";
-            continue;
-          }
-     
-          // 과거 날짜는 피드백 제공 (100%=초록점, 50%이상=노란점, 미만=빨간점)
-          const total = currentTasks.length;
-          const completed = currentTasks.filter(task => task.completed).length;
-          const percent = (completed / total) * 100;
-     
-          if(percent === 100){ dot.classList.add("status-green"); }
-          else if(percent >= 50){ dot.classList.add("status-yellow"); }
-          else{ dot.classList.add("status-red"); }
-        }
+ 
+      left.appendChild(checkbox);
+ 
+      left.appendChild(span);
+ 
+      li.appendChild(left);
+ 
+      li.appendChild(deleteBtn);
+ 
+      list.appendChild(li);
+ 
+    });
+ 
+    // 통계
+ 
+    const total=currentTasks.length;
+ 
+    const remaining=total-completed;
+ 
+    const percent=
+    total===0 ? 0 : Math.round((completed/total)*100);
+ 
+    document.getElementById("completedCount").textContent=
+    completed;
+ 
+    document.getElementById("totalCount").textContent=
+    total;
+ 
+    document.getElementById("remainingText").textContent=
+    `남은 과제 ${remaining}개`;
+ 
+    document.getElementById("progressText").textContent=
+    `진행률 ${percent}%`;
+ 
+    document.getElementById("progressBar").style.width=
+    `${percent}%`;
+ 
+  }
+ 
+  // 캘린더 상태 업데이트
+ 
+  function updateCalendarStatus(){
+ 
+    document.querySelectorAll(".day").forEach(day=>{
+ 
+      day.classList.remove(
+        "status-red",
+        "status-yellow",
+        "status-green"
+      );
+ 
+      const date = Number(day.dataset.day);
+ 
+      const currentTasks = tasks[date];
+ 
+      // 과제 없으면 표시 안함
+ 
+      if(!currentTasks || currentTasks.length===0){
+        return;
       }
-      
-      // 초기 실행 시 도트 상태 세팅
-      updateCalendarStatus();
-    </script>
-</body>
-</html>
+ 
+      // 오늘 날짜 이상은 표시 안함
+      // (오늘 포함 기본색 유지)
+ 
+      if(date >= today){
+        return;
+      }
+ 
+      const total = currentTasks.length;
+ 
+      const completed = currentTasks.filter(
+        task => task.completed
+      ).length;
+ 
+      const percent = (completed / total) * 100;
+ 
+      // 100% 완료 → 초록
+ 
+      if(percent === 100){
+ 
+        day.classList.add("status-green");
+ 
+      }
+ 
+      // 50% 이상 → 노랑
+ 
+      else if(percent >= 50){
+ 
+        day.classList.add("status-yellow");
+ 
+      }
+ 
+      // 50% 미만 → 빨강
+ 
+      else{
+ 
+        day.classList.add("status-red");
+ 
+      }
+ 
+    });
+ 
+  }
+</script>
